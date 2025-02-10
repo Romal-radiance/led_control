@@ -541,8 +541,13 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 	char addr[BT_ADDR_LE_STR_LEN] = {0};
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, ARRAY_SIZE(addr));
-
+	char received_data[len + 1];
 	LOG_INF("Received data from: %s", addr);
+
+	// if(len == 2)
+	strncpy(received_data, (const char *)data, len);
+	received_data[len] = '\0';
+	led_toggle_lbs(received_data, len);
 
 	for (uint16_t pos = 0; pos != len;) {
 		struct uart_data_t *tx = k_malloc(sizeof(*tx));
