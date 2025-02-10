@@ -145,7 +145,7 @@ static void led_toggle(char *led)
 		dk_set_led(L4, 1);
 		break;
 	default:
-		printk("invalid command1232\n");
+		printk("invalid command\n");
 		flag = 1;
 		break;
 	}
