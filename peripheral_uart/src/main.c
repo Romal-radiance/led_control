@@ -160,6 +160,8 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 	struct uart_data_t *buf;
 	static uint8_t *aborted_buf;
 	static bool disable_req;
+	static uint8_t rx_buffer[128];
+	static int rx_len = 0;
 
 	switch (evt->type) {
 	case UART_TX_DONE:
@@ -193,20 +195,19 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		break;
 
 	case UART_RX_RDY:
-		LOG_DBG("UART_RX_RDY");
-		buf = CONTAINER_OF(evt->data.rx.buf, struct uart_data_t, data[0]);
-		buf->len += evt->data.rx.len;
-
-		if (disable_req) {
+		memcpy(rx_buffer + rx_len, evt->data.rx.buf, evt->data.rx.len);
+		rx_len += evt->data.rx.len;
+		 printk("%c", evt->data.rx.buf[evt->data.rx.len - 1]);
+		if (rx_len > 0 && (rx_buffer[rx_len - 1] == '\n' || rx_buffer[rx_len - 1] == '\r'))
+		{
+			rx_buffer[rx_len] = '\0';
+			led_toggle(rx_buffer);
+			rx_len = 0;
+		}
+		if (disable_req)
+		{
 			return;
 		}
-
-		if ((evt->data.rx.buf[buf->len - 1] == '\n') ||
-		    (evt->data.rx.buf[buf->len - 1] == '\r')) {
-			disable_req = true;
-			uart_rx_disable(uart);
-		}
-
 		break;
 
 	case UART_RX_DISABLED:
